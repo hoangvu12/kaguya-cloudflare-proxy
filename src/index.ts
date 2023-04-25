@@ -68,7 +68,11 @@ async function handleRequest(request: Request) {
     options.deleteResHeaders = JSON.parse(deleteResHeaders);
   }
 
-  const requestHeaders = new Headers();
+  const requestHeaders = new Headers({
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,HEAD,POST,OPTIONS",
+    "access-control-max-age": "86400",
+  });
 
   if (!options.ignoreReqHeaders) {
     request.headers.forEach((value, key) => {
