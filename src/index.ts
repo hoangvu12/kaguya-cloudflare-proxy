@@ -68,11 +68,7 @@ async function handleRequest(request: Request) {
     options.deleteResHeaders = JSON.parse(deleteResHeaders);
   }
 
-  const requestHeaders = new Headers({
-    "access-control-allow-origin": "*",
-    "access-control-allow-methods": "GET,HEAD,POST,OPTIONS",
-    "access-control-max-age": "86400",
-  });
+  const requestHeaders = new Headers();
 
   if (!options.ignoreReqHeaders) {
     request.headers.forEach((value, key) => {
@@ -110,6 +106,16 @@ async function handleRequest(request: Request) {
       responseHeaders.delete(header.toLowerCase())
     );
   }
+
+  const corsHeaders = {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,HEAD,POST,OPTIONS",
+    "access-control-max-age": "86400",
+  };
+
+  Object.entries(corsHeaders).forEach(([header, value]) => {
+    responseHeaders.append(header.toLowerCase(), value);
+  });
 
   let resBody = null;
 
