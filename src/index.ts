@@ -93,6 +93,12 @@ async function handleRequest(request: Request) {
     headers: requestHeaders,
   });
 
+  const blacklistHeaders = [
+    "access-control-allow-origin",
+    "access-control-max-age",
+    "access-control-allow-methods",
+  ];
+
   const responseHeaders = new Headers(proxyResponse.headers);
 
   if (options.appendResHeaders) {
@@ -105,6 +111,10 @@ async function handleRequest(request: Request) {
     options.deleteResHeaders.forEach((header) =>
       responseHeaders.delete(header.toLowerCase())
     );
+
+    blacklistHeaders.forEach((header) => {
+      responseHeaders.delete(header.toLowerCase());
+    });
   }
 
   const corsHeaders = {
