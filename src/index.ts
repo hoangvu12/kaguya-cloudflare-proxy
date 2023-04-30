@@ -77,7 +77,11 @@ async function handleRequest(request: Request) {
   }
 
   if (options.appendReqHeaders) {
-    options.appendResHeaders.forEach((header) => {
+    console.log("Adding appendReqHeaders");
+
+    options.appendReqHeaders.forEach((header) => {
+      console.log("Header", header[0], header[1]);
+
       requestHeaders.append(header[0].toLowerCase(), header[1]);
     });
   }
