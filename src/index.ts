@@ -9,9 +9,20 @@ type Options = {
   deleteResHeaders: string[];
 };
 
+function logEntries(iterator: IterableIterator<[key: string, value: string]>) {
+  let string = "";
+
+  for (const [key, value] of iterator) {
+    string += `${key}: ${value}\n`;
+  }
+
+  return string;
+}
+
 async function handleRequest(request: Request) {
   const url = new URL(request.url);
   const proxyUrl = url.searchParams.get("url");
+  const host = new URL(proxyUrl as string).host;
 
   if (!proxyUrl) {
     return new Response("Missing URL parameter", { status: 400 });
@@ -77,10 +88,10 @@ async function handleRequest(request: Request) {
   }
 
   if (options.appendReqHeaders) {
-    console.log("Adding appendReqHeaders");
-
     options.appendReqHeaders.forEach((header) => {
-      console.log("Header", header[0], header[1]);
+      if (requestHeaders.has(header[0].toLowerCase())) {
+        requestHeaders.delete(header[0].toLowerCase());
+      }
 
       requestHeaders.append(header[0].toLowerCase(), header[1]);
     });
@@ -91,6 +102,11 @@ async function handleRequest(request: Request) {
       requestHeaders.delete(header.toLowerCase());
     });
   }
+
+  requestHeaders.delete("host");
+  requestHeaders.append("host", host);
+
+  console.log("requestHeaders", logEntries(requestHeaders.entries()));
 
   const proxyResponse = await fetch(proxyUrl, {
     redirect: options.followRedirect ? "follow" : "manual",
@@ -106,9 +122,13 @@ async function handleRequest(request: Request) {
   const responseHeaders = new Headers(proxyResponse.headers);
 
   if (options.appendResHeaders) {
-    options.appendResHeaders.forEach((header) =>
-      responseHeaders.append(header[0].toLowerCase(), header[1])
-    );
+    options.appendResHeaders.forEach((header) => {
+      if (responseHeaders.has(header[0].toLowerCase())) {
+        responseHeaders.delete(header[0].toLowerCase());
+      }
+
+      responseHeaders.append(header[0].toLowerCase(), header[1]);
+    });
   }
 
   if (options.deleteResHeaders) {
@@ -138,6 +158,8 @@ async function handleRequest(request: Request) {
   } else {
     resBody = proxyResponse.body;
   }
+
+  console.log("responseHeaders", logEntries(responseHeaders.entries()));
 
   const response = new Response(resBody, {
     status: proxyResponse.status,
